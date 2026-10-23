@@ -1,0 +1,34 @@
+name: Build iOS IPA
+
+on:
+  workflow_dispatch: # Allows you to manually trigger the build whenever you want
+
+jobs:
+  build:
+    runs-on: macos-latest # Uses GitHub's modern macOS runners
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive # Crucial for pulling down dependencies/submodules if the repo uses them
+
+      - name: Setup Homebrew and Dependencies
+        run: |
+          brew install cmake ninja
+
+      - name: Run Build Script
+        run: |
+          # Making sure the script is executable
+          chmod +x ./make-ios.sh
+          # Running the script to generate the IPA
+          ./make-ios.sh --ipa
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mush8-ios-ipa
+          path: |
+            *.ipa
+            build/**/*.ipa
+          if-no-files-found: warn
