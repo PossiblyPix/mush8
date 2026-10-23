@@ -1,27 +1,35 @@
 name: Build iOS IPA
 
 on:
-  workflow_dispatch: # Allows you to manually trigger the build whenever you want
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: macos-latest # Uses GitHub's modern macOS runners
+    runs-on: macos-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          submodules: recursive # Crucial for pulling down dependencies/submodules if the repo uses them
+          submodules: recursive
 
       - name: Setup Homebrew and Dependencies
         run: |
           brew install cmake ninja
 
+      - name: Inject Secret Keys
+        env:
+          PROD_KEYS_CONTENT: ${{ secrets.PROD_KEYS }}
+        run: |
+          # Write the secret text back into a physical file where the build script expects it
+          echo "$PROD_KEYS_CONTENT" > prod.keys
+          
+          # If the script expects it inside a specific directory or under a different name (e.g., ~/.config or root), 
+          # you can duplicate it or place it there. Usually, the repository root works.
+
       - name: Run Build Script
         run: |
-          # Making sure the script is executable
           chmod +x ./make-ios.sh
-          # Running the script to generate the IPA
           ./make-ios.sh --ipa
 
       - name: Upload IPA Artifact
