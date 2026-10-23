@@ -1,17 +1,17 @@
 name: Build iOS IPA
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: # Allows you to manually trigger the build whenever you want
 
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: macos-latest # Uses GitHub's modern macOS runners
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          submodules: recursive
+          submodules: recursive # Crucial for pulling down dependencies/submodules
 
       - name: Setup Homebrew and Dependencies
         run: |
@@ -21,14 +21,17 @@ jobs:
         env:
           PROD_KEYS_CONTENT: ${{ secrets.PROD_KEYS }}
         run: |
-          # Write the secret text back into a physical file where the build script expects it
+          # Secures and writes the plain-text keys into a file the build system expects
           echo "$PROD_KEYS_CONTENT" > prod.keys
-          
-          # If the script expects it inside a specific directory or under a different name (e.g., ~/.config or root), 
-          # you can duplicate it or place it there. Usually, the repository root works.
+
+      - name: Download and Rename Base Game File
+        run: |
+          # Downloads the base game from your private link and forces the name to base.nsp
+          curl -L "https://datadock-dl.datadock.workers.dev/dl/eyJ0IjoicjIiLCJmIjoiTWFyaW8gS2FydCA4IERlbHV4ZSBiYXNlLm5zcCIsImMiOiJhcHBsaWNhdGlvbi9vY3RldC1zdHJlYW0iLCJlIjoxNzkyNzcyMTUwLCJrIjoidXBsb2Fkcy81YzhjMjZhMS0xNDc0LTQxMjktOGM2MC1kZmRmOTMxYjcwODIvTWFyaW8gS2FydCA4IERlbHV4ZSBiYXNlLm5zcCJ9.496b44dd286487dc040787e98ee1b28e18e5035b69534dd2d7f96b165a4783cd" -o base.nsp
 
       - name: Run Build Script
         run: |
+          # Makes the script executable and runs it to generate the IPA
           chmod +x ./make-ios.sh
           ./make-ios.sh --ipa
 
